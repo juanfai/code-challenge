@@ -35,6 +35,8 @@ def process_operations(operations):
     """
     if not isinstance(operations, list):
         raise ValueError("operations must be a list")
+    if not operations:
+        raise ValueError("operations must not be empty")
 
     quantity = 0.0
     weighted_avg = 0.0
@@ -159,8 +161,15 @@ def _validate_operation_object(op, index):
 
 
 def _to_finite_number(value, field_name, index=None):
-    """Convert value to float, rejecting non-numeric or non-finite inputs."""
-    label = field_name if index is None else f"{field_name} (operation {index})"
+    """
+    Convert a field to float while rejecting invalid inputs (non-numeric, bool,
+    NaN, or infinities). Builds a contextual label (`operation N`) to surface
+    clear error messages to the caller/CLI.
+    """
+    if index is None:
+        label = field_name
+    else:
+        label = f"{field_name} (operation {index})"
     if isinstance(value, bool):
         raise ValueError(f"{label} must be a numeric value")
 

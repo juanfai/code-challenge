@@ -199,6 +199,11 @@ def test_operations_must_be_list():
         process_operations({"operation": "buy"})
 
 
+def test_operations_must_not_be_empty():
+    with pytest.raises(ValueError, match="operations must not be empty"):
+        process_operations([])
+
+
 def test_invalid_operation_kind():
     ops = """
     [
