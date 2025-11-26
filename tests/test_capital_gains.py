@@ -220,7 +220,7 @@ def test_non_numeric_quantity():
         {"operation":"buy", "unit-cost":10.00, "quantity":"a lot"}
     ]
     """
-    with pytest.raises(ValueError, match="quantity \\(operation 1\\) must be a numeric value"):
+    with pytest.raises(ValueError, match=r"quantity (operation 1) must be a numeric value"):
         run_ops(ops)
 
 
