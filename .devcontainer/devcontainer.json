@@ -1,0 +1,20 @@
+{
+  "name": "capital-gains-cli",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "features": {},
+  "postCreateCommand": "pip install pytest",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.testing.pytestEnabled": true,
+        "python.testing.unittestEnabled": false
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance"
+      ]
+    }
+  },
+  "remoteUser": "vscode"
+}

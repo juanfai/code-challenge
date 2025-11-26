@@ -46,4 +46,7 @@ pytest -q
 - **I/O model**: Streams via STDIN/STDOUT for easy piping and shell integration; a sample `input.txt` is included for convenience.
 
 ## Live demo
-No hosted demo is provided; run locally or via Docker using the commands above.
+- Open the pre-provisioned GitHub Codespace named **LIVE DEMO** from the Codespaces tab (or create a new one via `Code` → `Codespaces` → `Create codespace on main`; devcontainer uses Python 3.12 and installs `pytest`).
+- In the integrated terminal run:
+  - `python exercise.py < input.txt` (the last 3 lines of `input.txt` are invalid-case examples; remove them if you only want successful runs).
+  - `pytest -s -lv`
