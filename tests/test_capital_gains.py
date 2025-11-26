@@ -1,5 +1,8 @@
 import json
-from exercise import process_operations
+
+import pytest
+
+from exercise import process_operations, round2
 
 
 def run_ops(json_str):
@@ -189,3 +192,33 @@ def test_case_9():
         {"tax": 1000.0},
         {"tax": 2400.0}
     ]
+
+
+def test_operations_must_be_list():
+    with pytest.raises(ValueError, match="operations must be a list"):
+        process_operations({"operation": "buy"})
+
+
+def test_invalid_operation_kind():
+    ops = """
+    [
+        {"operation":"hold", "unit-cost":10.00, "quantity":5}
+    ]
+    """
+    with pytest.raises(ValueError, match="Unsupported operation 'hold'"):
+        run_ops(ops)
+
+
+def test_non_numeric_quantity():
+    ops = """
+    [
+        {"operation":"buy", "unit-cost":10.00, "quantity":"a lot"}
+    ]
+    """
+    with pytest.raises(ValueError, match="quantity \\(operation 1\\) must be a numeric value"):
+        run_ops(ops)
+
+
+def test_round2_rejects_non_numeric():
+    with pytest.raises(ValueError, match="value must be a numeric value"):
+        round2("abc")

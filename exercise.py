@@ -7,16 +7,19 @@ the take-home challenge. It supports weighted average price updates,
 loss accumulation, and correct tax application based on thresholds.
 """
 
-import sys
 import json
+import math
+import sys
+from typing import Any
 
 TAX_RATE = 0.20
 TAX_FREE_THRESHOLD = 20000.00
 
 
-def round2(value):
-    """Round a float to two decimal places."""
-    return round(value, 2)
+def round2(value: Any):
+    """Round a numeric value to two decimal places with type validation."""
+    numeric = _to_finite_number(value, "value")
+    return round(numeric, 2)
 
 
 def process_operations(operations):
@@ -30,16 +33,24 @@ def process_operations(operations):
     Returns:
         list[dict]: A list of {"tax": float} entries matching each operation.
     """
+    if not isinstance(operations, list):
+        raise ValueError("operations must be a list")
+
     quantity = 0.0
     weighted_avg = 0.0
     accumulated_loss = 0.0
 
     taxes = []
 
-    for op in operations:
+    for index, op in enumerate(operations, start=1):
+        _validate_operation_object(op, index)
+
         kind = op["operation"]
-        unit_cost = float(op["unit-cost"])
-        qty = float(op["quantity"])
+        unit_cost = _to_finite_number(op.get("unit-cost"), "unit-cost", index)
+        qty = _to_finite_number(op.get("quantity"), "quantity", index)
+
+        if kind not in {"buy", "sell"}:
+            raise ValueError(f"Unsupported operation '{kind}' at index {index}")
 
         if kind == "buy":
             quantity, weighted_avg, tax = handle_buy(quantity, weighted_avg, qty, unit_cost)
@@ -138,18 +149,54 @@ def compute_tax(net_profit):
     return 0.0
 
 
+def _validate_operation_object(op, index):
+    """Ensure each operation is a dict with required keys."""
+    if not isinstance(op, dict):
+        raise ValueError(f"operation at index {index} must be an object")
+    for key in ("operation", "unit-cost", "quantity"):
+        if key not in op:
+            raise ValueError(f"operation at index {index} missing required field '{key}'")
+
+
+def _to_finite_number(value, field_name, index=None):
+    """Convert value to float, rejecting non-numeric or non-finite inputs."""
+    label = field_name if index is None else f"{field_name} (operation {index})"
+    if isinstance(value, bool):
+        raise ValueError(f"{label} must be a numeric value")
+
+    try:
+        numeric = float(value)
+    except (TypeError, ValueError):
+        raise ValueError(f"{label} must be a numeric value") from None
+
+    if math.isinf(numeric) or math.isnan(numeric):
+        raise ValueError(f"{label} must be finite")
+
+    return numeric
+
+
 def main():
     """
     CLI entrypoint: reads JSON operations from stdin line by line,
     processes each batch, and prints the corresponding tax list.
     """
-    for line in sys.stdin:
+    for line_no, line in enumerate(sys.stdin, start=1):
         line = line.strip()
         if not line:
-            break
+            continue
 
-        operations = json.loads(line)
-        taxes = process_operations(operations)
+        try:
+            operations = json.loads(line)
+        except json.JSONDecodeError as exc:
+            sys.stderr.write(f"Invalid JSON on line {line_no}: {exc}\n")
+            sys.exit(1)
+
+        try:
+            taxes = process_operations(operations)
+        except ValueError as exc:
+            sys.stderr.write(f"Invalid operations on line {line_no}: {exc}\n")
+            sys.exit(1)
+
         print(json.dumps(taxes))
 
 
