@@ -2,6 +2,11 @@
 
 CLI to calculate capital gains taxes by reading operations from `stdin` and printing results to `stdout` as JSON. Input is streamed: each line is a JSON array of operations, and each line of output is the corresponding list of tax results.
 
+## Setup
+- Use the latest stable Python 3.10+ (no external dependencies required).
+- (Optional) Create a virtualenv: `python -m venv .venv && source .venv/bin/activate`.
+- (Optional) Install test tooling: `pip install pytest`.
+
 ## How to run (local)
 - Requires Python 3.10+.
 - Use the bundled sample input (`input.txt`) or provide your own JSON array per line:
@@ -36,6 +41,16 @@ Install `pytest` if needed, then run:
 ```bash
 pytest -q
 ```
+
+## Tax calculation logic
+- Maintain running `quantity`, `weighted average` cost, and `accumulated loss`.
+- **Buy**: increase quantity; recompute weighted average from previous total cost + new lot cost.
+- **Sell**:
+  - Compute gross profit `(unit-cost - weighted_avg) * quantity`.
+  - If gross profit is negative, add it (as a positive value) to `accumulated_loss`; tax is `0`.
+  - If gross profit is positive:
+    - If total sale amount ≤ 20,000, tax is `0` (even if profitable).
+    - Otherwise, offset profit with `accumulated_loss`, then apply 20% tax on remaining profit; leftover loss carries forward.
 
 ## Technical decisions
 - **In-memory state**: Each call starts with clean `quantity`, `weighted average`, and `accumulated loss` to match the stateless CLI model.
